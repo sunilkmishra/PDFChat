@@ -1,0 +1,11 @@
+# Ignore environment files
+.env
+PDFChat/
+PDFDocs/
+
+# Ignore model and index files
+index.pkl
+index.faiss
+# Ignore system files
+__pycache__/
+*.pyc
