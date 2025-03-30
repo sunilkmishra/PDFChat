@@ -2,13 +2,14 @@ import os
 import tempfile
 from typing import Set
 import streamlit as st
+from dotenv import load_dotenv
+load_dotenv()
 from langchain_community.document_loaders import PyPDFLoader  # Updated import
 from langchain_community.vectorstores import FAISS  # Updated import
 from langchain_openai import OpenAIEmbeddings  # Updated import for OpenAIEmbeddings
 from streamlit_chat import message
 from langchain_openai import ChatOpenAI  # Updated import for ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
-from langchain_community.vectorstores import FAISS
 from typing import Any, Dict, List
 from langchain.prompts import PromptTemplate  # Correct import for PromptTemplate from langchain
 from langchain.text_splitter import CharacterTextSplitter  # Correct import for CharacterTextSplitter
@@ -18,6 +19,8 @@ api_key = os.getenv("OPENAI_API_KEY")
 if api_key is None:
     raise ValueError("OPENAI_API_KEY environment variable is not set.")
 os.environ["OPENAI_API_KEY"] = api_key
+
+VECTORSTORE_DIR = "faiss_index"  # Local directory to store FAISS index
 
 # Function to create a sources string for output
 def create_sources_string(source_urls: Set[str]) -> str:
@@ -33,7 +36,7 @@ def create_sources_string(source_urls: Set[str]) -> str:
 # Function to run the LLM for querying
 def run_llm(query: str, chat_history: List[Dict[str, Any]] = []):
     embeddings = OpenAIEmbeddings(openai_api_key=api_key)
-    docsearch = FAISS.load_local(r"C:\Teaching\GenAI\Excercises\PDFChat", embeddings, allow_dangerous_deserialization=True)
+    docsearch = FAISS.load_local(VECTORSTORE_DIR, embeddings, allow_dangerous_deserialization=True)
     chat = ChatOpenAI(verbose=True, temperature=0)
     qa = ConversationalRetrievalChain.from_llm(
         llm=chat, retriever=docsearch.as_retriever(), return_source_documents=True
@@ -73,7 +76,7 @@ if pdf_files and st.button('Build Vector Store'):
 
         embeddings = OpenAIEmbeddings()
         vectorstore = FAISS.from_documents(docs, embeddings)
-        vectorstore.save_local(r"C:\Teaching\GenAI\Excercises\PDFChat")
+        vectorstore.save_local(VECTORSTORE_DIR)
 
         st.success("Vector Store Created Successfully!")
 
